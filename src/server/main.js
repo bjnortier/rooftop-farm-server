@@ -2,18 +2,25 @@
 
 const express = require('express');
 const path = require('path');
+const chalk = require('chalk');
 const logger = require('morgan');
 const bodyParser = require('body-parser');
 const debug = require('debug')('server');
+const debugORM = require('debug')('orm');
 const mustacheExpress = require('mustache-express');
-
 const nconf = require('nconf');
-nconf.env();
+const Sequelize = require('sequelize');
 
+// ----- Config -----
+
+nconf.env();
 function isTruthy(x) {
   return String(x).trim().toUpperCase() === 'TRUE';
 }
 const RESPONSE_STACKTRACES = isTruthy(nconf.get('RESPONSE_STACKTRACES'));
+const SERVER_STORE_FILENAME = nconf.get('SERVER_STORE_FILENAME');
+
+// ----- Express App -----
 
 const app = express();
 const rootDir = path.join(__dirname, '..', '..');
@@ -24,14 +31,36 @@ app.use(logger('dev'));
 app.use(bodyParser.json({limit: '10mb'}));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(rootDir, 'public')));
-app.use('/bundles', express.static(path.join(rootDir, 'bundles')));
-
-app.use('/api', require('./api'));
-
-// view engine setup
 app.set('views', path.join(rootDir, 'views'));
 app.engine('mustache', mustacheExpress());
 app.set('view engine', 'mustache');
+
+// ----- ORM -----
+
+// Very large inserts will generate massive console.log messages, which
+// stalls the debugger
+function debug256(msg) {
+  if (msg.length > 256) {
+    debugORM(msg.slice(0, 256) + '...');
+  } else {
+    debugORM(msg);
+  }
+}
+
+let sequelize = new Sequelize('sqlite://', {
+  logging: debug256,
+  // logging: false,
+  storage: SERVER_STORE_FILENAME,
+});
+let ormModels = require('./ormModelFactory')(sequelize);
+
+// ----- Routes -----
+
+app.use('/bundles', express.static(path.join(rootDir, 'bundles')));
+app.use('/api', require('./api')(ormModels));
+
+
+// ----- Error handling -----
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
@@ -39,13 +68,21 @@ app.use((req, res, next) => {
   err.status = 404;
   next(err);
 });
-
-// error handlers
 const errorResponseHandler = require('./errorResponseHandler');
 app.use('/', errorResponseHandler(RESPONSE_STACKTRACES));
 
+// ----- Start -----
+
 // Server has started
 function callback(server) {
+  ormModels.init()
+    .then(function() {
+      debug('API initialized');
+    })
+    .catch(function(err) {
+      console.error('error during ORM init', chalk.red(err));
+    });
+
   var addr = server.address();
   var bind = typeof addr === 'string' ?
     'pipe ' + addr : 'port ' + addr.port;
