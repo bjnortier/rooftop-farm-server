@@ -2,8 +2,8 @@
 
 const joi = require('joi');
 const express = require('express');
-const debug = require('debug')('api');
 const chalk = require('chalk');
+const async = require('async');
 
 module.exports = function(models) {
   let router = express.Router();
@@ -12,38 +12,55 @@ module.exports = function(models) {
     res.status(200).json('hello');
   });
 
-  router.post('/measurement', (req, res /*, next */) => {
-    let input = req.body;
-    let schema = joi.object().keys({
-      timestamp: joi.date().timestamp().required(),
-      type: joi.string().required(),
-      data: joi.any().required(),
-    });
-    let error = joi.validate(input, schema).error;
+  let schema = joi.object().keys({
+    timestamp: joi.date().timestamp().required(),
+    type: joi.string().required(),
+    data: joi.any().required(),
+  });
+
+  function createMeasurement(m, cb) {
+    let error = joi.validate(m, schema).error;
     if (error) {
-      debug(error);
-      res.status(400).json(error.details.map((d) => {
-        return d.message;
-      }));
-    } else {
-      models.Measurement.create({
-        type: req.body.type,
-        timestamp: req.body.timestamp,
-        data: JSON.stringify(req.body.data),
+      cb(error);
+      return;
+    }
+    models.Measurement.create({
+      type: m.type,
+      timestamp: m.timestamp,
+      data: JSON.stringify(m.data),
+    })
+      .then(() => {
+        cb();
       })
-        .then((measurement) => {
-          debug(measurement.dataValues);
-          res.status(201).json('created');
-        })
-        .catch((err) => {
-          if (err.name === 'SequelizeValidationError') {
+      .catch((err) => {
+        cb(err);
+      });
+  }
+
+  router.post('/measurements', (req, res /*, next */) => {
+    let inputs = req.body;
+    async.series(
+      inputs.map(function(m) {
+        return function(cb) {
+          createMeasurement(m, cb);
+        };
+      }), function(err) {
+        if (err) {
+          console.error(err);
+          if (err.isJoi) {
+            res.status(400).json(err.details.map((d) => {
+              return d.message;
+            }));
+          } else if (err.name === 'SequelizeValidationError') {
             res.status('400').json(err.message);
           } else {
             console.error(chalk.red(err));
             res.sendStatus(500);
           }
-        });
-    }
+        } else {
+          res.status(201).json('created');
+        }
+      });
   });
 
   return router;

@@ -27,6 +27,7 @@
   },
   "homepage": "https://github.com/bjnortier/rooftop-farm-server#readme",
   "dependencies": {
+    "async": "^1.5.2",
     "bluebird": "^3.1.5",
     "body-parser": "^1.14.2",
     "chalk": "^1.1.1",
