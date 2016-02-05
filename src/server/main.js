@@ -18,8 +18,8 @@ function isTruthy(x) {
   return String(x).trim().toUpperCase() === 'TRUE';
 }
 const RESPONSE_STACKTRACES = isTruthy(nconf.get('RESPONSE_STACKTRACES'));
-const SERVER_STORE_FILENAME = nconf.get('SERVER_STORE_FILENAME');
-
+const DATABASE_URL = nconf.get('DATABASE_URL');
+const DATABASE_STORAGE = nconf.get('DATABASE_STORAGE');
 // ----- Express App -----
 
 const app = express();
@@ -47,10 +47,9 @@ function debug256(msg) {
   }
 }
 
-let sequelize = new Sequelize('sqlite://', {
+let sequelize = new Sequelize(DATABASE_URL, {
   logging: debug256,
-  // logging: false,
-  storage: SERVER_STORE_FILENAME,
+  storage: DATABASE_STORAGE,
 });
 let ormModels = require('./ormModelFactory')(sequelize);
 
