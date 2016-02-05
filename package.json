@@ -37,6 +37,7 @@
     "morgan": "^1.6.1",
     "mustache-express": "^1.2.2",
     "nconf": "^0.8.2",
+    "pg": "^4.4.4",
     "sequelize": "^3.18.0",
     "sqlite3": "^3.1.1",
     "triptych": "^1.8.1"
