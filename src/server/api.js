@@ -13,8 +13,9 @@ module.exports = function(models) {
   });
 
   let schema = joi.object().keys({
-    timestamp: joi.date().timestamp().required(),
+    id: joi.string().required(),
     type: joi.string().required(),
+    timestamp: joi.date().timestamp().required(),
     data: joi.any().required(),
   });
 
@@ -60,6 +61,21 @@ module.exports = function(models) {
         } else {
           res.status(201).json('created');
         }
+      });
+  });
+
+  router.get('/measurements', (req, res /*, next */) => {
+    models.Measurement.findAll({})
+      .then(function(measurements) {
+        res.status(200).json(measurements.map(function(m) {
+          return {
+            timestamp: m.timestamp,
+            data: JSON.parse(m.data),
+          };
+        }));
+      })
+      .catch(function(err) {
+        res.status(500).json(err);
       });
   });
 
