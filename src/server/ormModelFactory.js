@@ -3,7 +3,10 @@ var P = require('bluebird');
 
 module.exports = function(sequelize) {
 
-  var Measurement = sequelize.define('user', {
+  var Measurement = sequelize.define('measurement', {
+    sensor_id: {
+      type: Sequelize.STRING(2048),
+    },
     timestamp: {
       type: Sequelize.DATE,
     },
@@ -15,7 +18,9 @@ module.exports = function(sequelize) {
     }
   });
 
+  Measurement.tableAttributes.sensor_id.allowNull = false;
   Measurement.tableAttributes.timestamp.allowNull = false;
+  Measurement.tableAttributes.type.allowNull = false;
   Measurement.tableAttributes.data.allowNull = false;
 
   function init() {

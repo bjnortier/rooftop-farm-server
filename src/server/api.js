@@ -13,7 +13,7 @@ module.exports = function(models) {
   });
 
   let schema = joi.object().keys({
-    id: joi.string().required(),
+    sensor_id: joi.string().required(),
     type: joi.string().required(),
     timestamp: joi.date().timestamp().required(),
     data: joi.any().required(),
@@ -26,6 +26,7 @@ module.exports = function(models) {
       return;
     }
     models.Measurement.create({
+      sensor_id: m.sensor_id,
       type: m.type,
       timestamp: m.timestamp,
       data: JSON.stringify(m.data),
