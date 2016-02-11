@@ -4,6 +4,7 @@ const joi = require('joi');
 const express = require('express');
 const chalk = require('chalk');
 const async = require('async');
+const multer = require('multer');
 
 module.exports = function(models) {
   let router = express.Router();
@@ -12,7 +13,7 @@ module.exports = function(models) {
     res.status(200).json('hello');
   });
 
-  let schema = joi.object().keys({
+  let measurementSchema = joi.object().keys({
     sensor_id: joi.string().required(),
     type: joi.string().required(),
     timestamp: joi.date().timestamp().required(),
@@ -20,7 +21,7 @@ module.exports = function(models) {
   });
 
   function createMeasurement(m, cb) {
-    let error = joi.validate(m, schema).error;
+    let error = joi.validate(m, measurementSchema).error;
     if (error) {
       cb(error);
       return;
@@ -79,6 +80,83 @@ module.exports = function(models) {
         res.status(500).json(err);
       });
   });
+
+  const upload = multer();
+
+  let photoSchema = joi.object().keys({
+    sensor_id: joi.string().required(),
+    timestamp: joi.date().timestamp().required(),
+    extension: joi.string().required(),
+    bytes: joi.binary().required(),
+  });
+
+  function createPhoto(p, cb) {
+    let error = joi.validate(p, photoSchema).error;
+    if (error) {
+      cb(error);
+      return;
+    }
+    models.Photo.create({
+      sensor_id: p.sensor_id,
+      timestamp: p.timestamp,
+      extension: p.extension,
+      bytes: p.bytes,
+    })
+      .then(() => {
+        cb();
+      })
+      .catch((err) => {
+        cb(err);
+      });
+  }
+
+  router.post('/photos', upload.single('photo'), (req, res /*, next */) => {
+    let photo = {
+      sensor_id: req.body.sensor_id,
+      timestamp: parseFloat(req.body.timestamp, 10),
+      extension: req.body.extension,
+      bytes: req.file.buffer,
+    };
+
+    createPhoto(photo, (err) => {
+      if (err) {
+        console.error(err);
+        if (err.isJoi) {
+          res.status(400).json(err.details.map((d) => {
+            return d.message;
+          }));
+        } else if (err.name === 'SequelizeValidationError') {
+          res.status('400').json(err.message);
+        } else {
+          console.error(chalk.red(err));
+          res.sendStatus(500);
+        }
+      } else {
+        res.status(201).send('created');
+      }
+    });
+  });
+
+  router.get('/photos/latest', (req, res /*, next */) => {
+    models.Photo.findAll({
+      limit: 1,
+      order: '"timestamp" DESC',
+    })
+      .then(function(p) {
+        if (p.length) {
+          p = p[0];
+          res.set('content-type', 'image/jpeg');
+          res.status(200).send(p.bytes);
+        } else {
+          res.status(404).send('not found');
+        }
+      })
+      .catch(function(err) {
+        console.error(err);
+        res.status(500).send(err);
+      });
+  });
+
 
   return router;
 };

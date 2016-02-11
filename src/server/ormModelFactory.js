@@ -1,11 +1,13 @@
-var Sequelize = require('sequelize');
-var P = require('bluebird');
+'use strict';
+
+const Sequelize = require('sequelize');
+const P = require('bluebird');
 
 module.exports = function(sequelize) {
 
-  var Measurement = sequelize.define('measurement', {
+  let Measurement = sequelize.define('measurement', {
     sensor_id: {
-      type: Sequelize.STRING(2048),
+      type: Sequelize.STRING(128),
     },
     timestamp: {
       type: Sequelize.DATE,
@@ -23,14 +25,31 @@ module.exports = function(sequelize) {
   Measurement.tableAttributes.type.allowNull = false;
   Measurement.tableAttributes.data.allowNull = false;
 
+  let Photo = sequelize.define('photo', {
+    sensor_id: {
+      type: Sequelize.STRING(128),
+    },
+    timestamp: {
+      type: Sequelize.DATE,
+    },
+    extension: {
+      type: Sequelize.STRING(16),
+    },
+    bytes: {
+      type: Sequelize.BLOB('long'),
+    }
+  });
+
   function init() {
     return P.all([
       Measurement.sync(),
+      Photo.sync(),
     ]);
   }
 
   return {
     Measurement: Measurement,
+    Photo: Photo,
     init: init,
   };
 
