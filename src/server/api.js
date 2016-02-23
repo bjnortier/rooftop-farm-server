@@ -163,6 +163,27 @@ module.exports = function(models) {
       });
   });
 
+  router.get('/photo/:id', (req, res /*, next */) => {
+    console.log('>>', req.params);
+    models.Photo.find({
+      where: {
+        id: req.params.id,
+      }
+    })
+      .then(function(p) {
+        if (p) {
+          res.set('content-type', 'image/jpeg');
+          res.status(200).send(p.bytes);
+        } else {
+          res.status(404).send('not found');
+        }
+      })
+      .catch(function(err) {
+        console.error(err);
+        res.status(500).send(err);
+      });
+  });
+
   router.get('/photos/latest/meta', (req, res /*, next */) => {
     models.Photo.findAll({
       limit: 20,
