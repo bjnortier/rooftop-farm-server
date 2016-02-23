@@ -165,10 +165,8 @@ module.exports = function(models) {
 
   router.get('/photos/latest/meta', (req, res /*, next */) => {
     models.Photo.find({
-      where: {
-        limit: 20,
-        order: '"timestamp" DESC',
-      },
+      limit: 20,
+      order: '"timestamp" DESC',
       attributes: ['id', 'sensor_id', 'timestamp', 'extension'],
     })
       .then(function(p) {
