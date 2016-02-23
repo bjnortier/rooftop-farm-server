@@ -170,6 +170,7 @@ module.exports = function(models) {
       attributes: ['id', 'sensor_id', 'timestamp', 'extension'],
     })
       .then(function(records) {
+        console.info(records);
         res.status(200).json(records.map(function(p) {
           return {
             id: p.id,
