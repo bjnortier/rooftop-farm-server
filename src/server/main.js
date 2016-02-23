@@ -35,10 +35,13 @@ app.set('views', path.join(rootDir, 'views'));
 app.engine('mustache', mustacheExpress());
 app.set('view engine', 'mustache');
 
+// ----- Routes -----
+
 // ----- ORM -----
 
 // Very large inserts will generate massive console.log messages, which
 // stalls the debugger
+// jshint -W098
 function debug256(msg) {
   if (msg.length > 256) {
     debugORM(msg.slice(0, 256) + '...');
@@ -46,15 +49,18 @@ function debug256(msg) {
     debugORM(msg);
   }
 }
+// jshint +W098
 
 let sequelize = new Sequelize(DATABASE_URL, {
-  logging: debug256,
+  // logging: debug256,
+  logging: false,
   storage: DATABASE_STORAGE,
 });
 let ormModels = require('./ormModelFactory')(sequelize);
 
 // ----- Routes -----
 
+app.use('/', require('./apps'));
 app.use('/bundles', express.static(path.join(rootDir, 'bundles')));
 app.use('/api', require('./api')(ormModels));
 

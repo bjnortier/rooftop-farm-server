@@ -67,7 +67,13 @@ module.exports = function(models) {
   });
 
   router.get('/measurements', (req, res /*, next */) => {
-    models.Measurement.findAll({})
+    console.log(req.params);
+    let sensorId = req.query.sensor_id;
+    models.Measurement.findAll({
+      where: {
+        sensor_id: sensorId,
+      }
+    })
       .then(function(measurements) {
         res.status(200).json(measurements.map(function(m) {
           return {
