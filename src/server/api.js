@@ -169,18 +169,15 @@ module.exports = function(models) {
       order: '"timestamp" DESC',
       attributes: ['id', 'sensor_id', 'timestamp', 'extension'],
     })
-      .then(function(p) {
-        if (p.length) {
-          p = p[0];
-          res.status(200).json({
+      .then(function(records) {
+        res.status(200).json(records.map(function(p) {
+          return {
             id: p.id,
             sensor_id: p.sensor_id,
             timestamp: p.timestamp,
             extension: p.extension,
-          });
-        } else {
-          res.status(404).json('not found');
-        }
+          };
+        }));
       })
       .catch(function(err) {
         console.error(err);
