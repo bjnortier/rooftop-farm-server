@@ -137,7 +137,7 @@ module.exports = function(models) {
     });
   });
 
-  router.get('/photos/latest', (req, res /*, next */) => {
+  router.get('/photo/latest', (req, res /*, next */) => {
     models.Photo.findAll({
       limit: 1,
       order: '"timestamp" DESC',
@@ -149,6 +149,33 @@ module.exports = function(models) {
           res.status(200).send(p.bytes);
         } else {
           res.status(404).send('not found');
+        }
+      })
+      .catch(function(err) {
+        console.error(err);
+        res.status(500).send(err);
+      });
+  });
+
+  router.get('/photos/latest/meta', (req, res /*, next */) => {
+    models.Photo.find({
+      where: {
+        limit: 20,
+        order: '"timestamp" DESC',
+      },
+      attributes: ['id', 'sensor_id', 'timestamp', 'extension'],
+    })
+      .then(function(p) {
+        if (p.length) {
+          p = p[0];
+          res.status(200).json({
+            id: p.id,
+            sensor_id: p.sensor_id,
+            timestamp: p.timestamp,
+            extension: p.extension,
+          });
+        } else {
+          res.status(404).json('not found');
         }
       })
       .catch(function(err) {
