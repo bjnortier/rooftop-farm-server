@@ -164,13 +164,12 @@ module.exports = function(models) {
   });
 
   router.get('/photos/latest/meta', (req, res /*, next */) => {
-    models.Photo.find({
+    models.Photo.findAll({
       limit: 20,
       order: '"timestamp" DESC',
       attributes: ['id', 'sensor_id', 'timestamp', 'extension'],
     })
       .then(function(records) {
-        console.info(records);
         res.status(200).json(records.map(function(p) {
           return {
             id: p.id,
