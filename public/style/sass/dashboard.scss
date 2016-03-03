@@ -1,0 +1,55 @@
+body {
+  font: 10px sans-serif;
+  background-color: white;
+}
+
+div.graph {
+  width: 800px;
+  height: 250px;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.line {
+  fill: none;
+  stroke: #eee;
+  stroke-width: 1.5px;
+}
+
+.green-bounds, .orange-bounds {
+  fill: none;
+  stroke-width: 1.5px;
+  stroke-dasharray: 3, 3;
+}
+
+.green-bounds {
+  stroke: #23A223;
+}
+
+.orange-bounds {
+  stroke: #D8AF09;
+}
+
+.measurement {
+  stroke: #00f;
+}
+
+.measurement.green-band {
+  stroke: #23A223;
+  fill: #9f9;
+}
+
+.measurement.orange-band {
+  stroke: #D8AF09;
+  fill: #fc9;
+}
+
+.measurement.red-band {
+  stroke: #f00;
+  fill: #f99;
+}

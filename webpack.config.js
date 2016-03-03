@@ -3,8 +3,13 @@ module.exports = {
     loaders: [
       {
         test: /\.js$/,
-        exclude: /(node_modules)/,
-        loader: 'babel'
+        include: /(lib|test|node_modules\/trip.core\/lib|node_modules\/trip.dom\/lib)/,
+        loader: 'babel',
+        query: {
+          presets: [
+            require.resolve('babel-preset-es2015'),
+          ]
+        }
       }
     ]
   },
@@ -19,5 +24,6 @@ module.exports = {
   node: {
     net: 'empty',
     dns: 'empty',
+    crypto: 'empty',
   }
 };
